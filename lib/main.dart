@@ -76,23 +76,29 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
                 controller: cedulaController,
                 decoration: InputDecoration(labelText: 'Cédula'),
                 enabled: !esEditar, // No permitir editar la cédula
+                keyboardType: TextInputType.phone,
+                maxLength: 10,
               ),
               TextField(
                 controller: nombreController,
                 decoration: InputDecoration(labelText: 'Nombre'),
+                maxLength: 20,
               ),
               TextField(
                 controller: apellidoController,
                 decoration: InputDecoration(labelText: 'Apellido'),
+                maxLength: 20,
               ),
               TextField(
                 controller: direccionController,
                 decoration: InputDecoration(labelText: 'Dirección'),
+                maxLength: 20,
               ),
               TextField(
                 controller: telefonoController,
                 decoration: InputDecoration(labelText: 'Teléfono'),
                 keyboardType: TextInputType.phone,
+                maxLength: 10,
               ),
             ],
           ),
@@ -134,16 +140,53 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
     );
   }
 
+  void _confirmarEliminacion(Estudiante estudiante) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Confirmar eliminación"),
+          content: Text("¿Estás seguro de eliminar a ${estudiante.nombre} ${estudiante.apellido}?"),
+          actions: [
+            TextButton(
+              child: const Text("Cancelar"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra el diálogo sin borrar
+              },
+            ),
+            TextButton(
+              child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+              onPressed: () async {
+                Navigator.of(context).pop(); // Cierra el diálogo primero
+                
+                // Ahora sí, llamamos a la API
+                await api.deleteEstudiante(estudiante.cedula);
+                
+                // Actualizamos la pantalla
+                cargarDatos();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Estudiante eliminado")),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Lista de Estudiantes PHP y Android")),
+      appBar: AppBar(title: Text("Lista de Estudiantes")),
       body: Column(
         children: [
           Padding(
             padding: EdgeInsets.all(8.0),
             child: TextField(
               controller: _buscarController,
+              keyboardType: TextInputType.phone,
+              maxLength: 10,
               onChanged: (value) {
                 cargarDatos();
               },
@@ -189,11 +232,7 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {
-                          await api.deleteEstudiante(est.cedula);
-                          cargarDatos();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Estudiante eliminado")),
-                          );
+                          _confirmarEliminacion(est);
                         },
                       ),
                     );
