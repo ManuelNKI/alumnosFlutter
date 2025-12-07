@@ -28,6 +28,8 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
   final ApiService api = ApiService();
   late Future<List<Estudiante>> estudiantes;
 
+  final TextEditingController _buscarController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +38,11 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
 
   void cargarDatos() {
     setState(() {
-      estudiantes = api.getEstudiantes();
+      if (_buscarController.text.isEmpty) {
+        estudiantes = api.getEstudiantes();
+      } else {
+        estudiantes = api.buscarPorCedula(_buscarController.text);
+      }
     });
   }
 
@@ -131,40 +137,72 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Lista de Estudiantes PHP")),
-      body: FutureBuilder<List<Estudiante>>(
-        future: estudiantes,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("No hay estudiantes"));
-          }
+      appBar: AppBar(title: Text("Lista de Estudiantes PHP y Android")),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _buscarController,
+              onChanged: (value) {
+                cargarDatos();
+              },
+              decoration: InputDecoration(
+                hintText: 'Buscar por cédula...',
+                prefixIcon: Icon(Icons.search),
+                suffixIcon: _buscarController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear),
+                        onPressed: () {
+                          _buscarController.clear();
+                          cargarDatos();
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Estudiante>>(
+              future: estudiantes,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text("No hay estudiantes"));
+                }
 
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              Estudiante est = snapshot.data![index];
-              return ListTile(
-                title: Text("${est.nombre} ${est.apellido}"),
-                subtitle: Text(est.cedula),
-                onTap: () => _mostrarFormulario(estudiante: est),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red),
-                  onPressed: () async {
-                    await api.deleteEstudiante(est.cedula);
-                    cargarDatos();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Estudiante eliminado")),
+                return ListView.builder(
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    Estudiante est = snapshot.data![index];
+                    return ListTile(
+                      title: Text("${est.nombre} ${est.apellido}"),
+                      subtitle: Text(est.cedula),
+                      onTap: () => _mostrarFormulario(estudiante: est),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await api.deleteEstudiante(est.cedula);
+                          cargarDatos();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Estudiante eliminado")),
+                          );
+                        },
+                      ),
                     );
                   },
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),

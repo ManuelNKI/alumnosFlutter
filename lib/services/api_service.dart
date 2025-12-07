@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:androdalumnos/models/estudiante.dart';
 
 class ApiService {
-
-  final String urlApi = 'http://10.0.2.2/Servicios/DeberMVC/PHPProyect/controllers/api.php';
+  final String urlApi =
+      'http://10.0.2.2/Servicios/DeberMVC/PHPProyect/controllers/api.php';
   Future<List<Estudiante>> getEstudiantes() async {
     final response = await http.get(Uri.parse(urlApi));
 
@@ -44,5 +44,16 @@ class ApiService {
     String query = "?cedula=$cedula";
     final response = await http.delete(Uri.parse(urlApi + query));
     return response.body; // Retorna "Eliminado"
+  }
+
+  Future<List<Estudiante>> buscarPorCedula(String cedula) async {
+    final response = await http.get(Uri.parse('$urlApi?cedula=$cedula'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> body = jsonDecode(response.body);
+      return body.map((json) => Estudiante.fromJson(json)).toList();
+    } else {
+      throw Exception('Fallo al buscar estudiante');
+    }
   }
 }
