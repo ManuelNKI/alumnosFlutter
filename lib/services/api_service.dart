@@ -4,7 +4,7 @@ import 'package:androdalumnos/models/estudiante.dart';
 
 class ApiService {
   final String urlApi =
-      'http://192.168.100.10/apiMovil/api.php';
+      'http://192.168.68.108/apiMovil/api.php';
   Future<List<Estudiante>> getEstudiantes() async {
     final response = await http.get(Uri.parse(urlApi));
 

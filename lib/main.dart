@@ -146,7 +146,9 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Confirmar eliminación"),
-          content: Text("¿Estás seguro de eliminar a ${estudiante.nombre} ${estudiante.apellido}?"),
+          content: Text(
+            "¿Estás seguro de eliminar a ${estudiante.nombre} ${estudiante.apellido}?",
+          ),
           actions: [
             TextButton(
               child: const Text("Cancelar"),
@@ -155,13 +157,16 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
               },
             ),
             TextButton(
-              child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+              child: const Text(
+                "Eliminar",
+                style: TextStyle(color: Colors.red),
+              ),
               onPressed: () async {
                 Navigator.of(context).pop(); // Cierra el diálogo primero
-                
+
                 // Ahora sí, llamamos a la API
                 await api.deleteEstudiante(estudiante.cedula);
-                
+
                 // Actualizamos la pantalla
                 cargarDatos();
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -221,19 +226,148 @@ class _ListaEstudiantesState extends State<ListaEstudiantes> {
                   return Center(child: Text("No hay estudiantes"));
                 }
 
+                // ... dentro del FutureBuilder ...
+
                 return ListView.builder(
+                  padding: const EdgeInsets.only(
+                    bottom: 80,
+                  ), // Espacio para que el botón flotante no tape el último item
                   itemCount: snapshot.data!.length,
                   itemBuilder: (context, index) {
                     Estudiante est = snapshot.data![index];
-                    return ListTile(
-                      title: Text("${est.nombre} ${est.apellido}"),
-                      subtitle: Text(est.cedula),
-                      onTap: () => _mostrarFormulario(estudiante: est),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          _confirmarEliminacion(est);
-                        },
+
+                    return Card(
+                      elevation: 3, // Sombreado
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ), // Separación entre tarjetas
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(15),
+                        onTap: () => _mostrarFormulario(
+                          estudiante: est,
+                        ), // Editar al tocar la tarjeta
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              // 1. AVATAR (Inicial del nombre)
+                              CircleAvatar(
+                                radius: 25,
+                                backgroundColor: Colors.blue.shade100,
+                                child: Text(
+                                  est.nombre.isNotEmpty
+                                      ? est.nombre[0].toUpperCase()
+                                      : '?',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade900,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+
+                              // 2. INFORMACIÓN CENTRAL (Columna)
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Nombre completo en negrita
+                                    Text(
+                                      "${est.nombre} ${est.apellido}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // Fila Cédula
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.badge_outlined,
+                                          size: 16,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          est.cedula,
+                                          style: TextStyle(
+                                            color: Colors.grey[700],
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+
+                                    // Fila Teléfono
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.phone_outlined,
+                                          size: 16,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          est.telefono,
+                                          style: TextStyle(
+                                            color: Colors.grey[700],
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+
+                                    // Fila Dirección (con manejo de texto largo)
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on_outlined,
+                                          size: 16,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Expanded(
+                                          child: Text(
+                                            est.direccion,
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                              fontSize: 13,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow
+                                                .ellipsis, // Puntos suspensivos si es muy largo
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // 3. BOTÓN ELIMINAR
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () async {
+                                  _confirmarEliminacion(est);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     );
                   },
